@@ -67,7 +67,7 @@ GitHub es la fuente de verdad del código y de los requisitos. V0 genera la apli
 
 ## Especificación, trazabilidad y validación
 
-- Las HU viven únicamente en archivos Gherkin `.feature` escritos en inglés. README es el único documento explicativo del proyecto.
+- Las HU viven únicamente en archivos Gherkin `.feature` escritos en inglés. README define el producto y sus restricciones; `AGENTS.md` contiene las instrucciones operativas para los agentes que implementan HU.
 - Cada HU tiene un ID estable `HU-###`, un issue de GitHub con el mismo ID en el título y referencias al archivo y a los escenarios Gherkin correspondientes.
 - Cada escenario debe expresar una sola conducta observable con precondiciones, datos, acción, resultado y límites verificables. Se prohíben términos subjetivos, estados implícitos, expectativas no medibles y dependencias tácitas entre escenarios.
 - Antes de publicar una HU se valida la sintaxis con un parser Gherkin y se realiza revisión semántica de ambigüedades. Las pruebas automatizadas críticas se ejecutan en cada pull request.
