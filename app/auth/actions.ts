@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation"
 import { z } from "zod"
 import { createClient } from "@/lib/supabase/server"
+import { createAdminClient } from "@/lib/supabase/admin"
 import { loginMessage, registrationMessage } from "@/lib/auth/access"
 
 export type AuthState = { error?: string; success?: string }
@@ -16,15 +17,14 @@ const registerSchema = credentialsSchema.extend({ name: z.string().trim().min(2)
 export async function register(_: AuthState, formData: FormData): Promise<AuthState> {
   const parsed = registerSchema.safeParse(Object.fromEntries(formData))
   if (!parsed.success) return { error: "Revisa el nombre, correo y contraseña" }
-  const supabase = await createClient()
-  const { data, error } = await supabase.auth.signUp({
+  const supabase = createAdminClient()
+  const { error } = await supabase.auth.admin.createUser({
     email: parsed.data.email,
     password: parsed.data.password,
-    options: { data: { name: parsed.data.name } }
+    email_confirm: true,
+    user_metadata: { name: parsed.data.name }
   })
-  if (error || !data.user?.identities?.length) {
-    return { error: registrationMessage(error?.code, Boolean(data.user?.identities?.length)) }
-  }
+  if (error) return { error: registrationMessage(error.code) }
   return { success: "Cuenta creada. Ya puedes iniciar sesión." }
 }
 

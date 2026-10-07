@@ -8,6 +8,7 @@ describe("HU-001 registro público", () => {
 
   it("informa un correo existente con el mensaje aprobado", () => {
     expect(registrationMessage("user_already_exists")).toBe("Ya existe una cuenta con este correo")
+    expect(registrationMessage("email_exists")).toBe("Ya existe una cuenta con este correo")
     expect(registrationMessage(undefined, false)).toBe("Ya existe una cuenta con este correo")
   })
 })

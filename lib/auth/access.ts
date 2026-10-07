@@ -9,7 +9,7 @@ export function publicRegistrationRole(): Role {
 }
 
 export function registrationMessage(errorCode?: string, hasIdentity = true) {
-  if (errorCode === "user_already_exists" || !hasIdentity) {
+  if (errorCode === "user_already_exists" || errorCode === "email_exists" || !hasIdentity) {
     return "Ya existe una cuenta con este correo"
   }
   return "No pudimos crear la cuenta. Intenta nuevamente."
