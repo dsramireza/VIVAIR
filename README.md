@@ -62,8 +62,6 @@ GitHub es la fuente de verdad del código y de los requisitos. V0 genera la apli
 - **Ramas y pull requests:** cada HU se trabaja desde `main` en una rama `feature/hu-###-<slug>`. V0 puede enviar commits a esa rama, pero el pull request hacia `main` se abre y se integra manualmente desde GitHub. No se usa la acción **Publish** de V0 para hacer merge. No se mantienen ramas permanentes `development` o `test`.
 - **Validación:** GitHub Actions ejecuta el check obligatorio `PR Gate` en cada pull request hacia `main`, sin filtros de rutas en el evento. Los cambios de README, Markdown, Gherkin y configuración de GitHub ejecutan solo las validaciones documentales aplicables. Los cambios de aplicación ejecutan los scripts configurados de lint, tipos y pruebas unitarias; si no existe un script de pruebas, las pruebas unitarias se omiten hasta que se añada una suite.
 - **Vercel:** las ramas de feature generan Previews y los cambios de código integrados en `main` generan Production. En los pull requests con código, las pruebas de GitHub Actions y el Preview de Vercel se ejecutan en paralelo; antes del merge manual también se revisa que el Preview haya terminado correctamente. El Ignored Build Step usa `.github/scripts/ignore-vercel-build.sh` para omitir builds cuando el commit solo cambia documentación o configuración de GitHub; Vercel puede contar deployments cancelados hacia la cuota.
-- **Límites vigentes consultados el 7 de octubre de 2026:** V0 Free indica USD 5 de créditos mensuales, 7 mensajes al día, sincronización con GitHub y despliegue en Vercel. V0 usa Next.js por defecto para aplicaciones full-stack. [Precios de V0](https://api2.v0.dev/pricing) · [Documentación full-stack de V0](https://v0.dev/docs/full-stack-apps)
-- Supabase Free permite dos proyectos activos y pausa proyectos tras una semana de inactividad. [Precios de Supabase](https://supabase.com/pricing)
 
 ## Especificación, trazabilidad y validación
 
@@ -77,3 +75,4 @@ GitHub es la fuente de verdad del código y de los requisitos. V0 genera la apli
 - El tablero de GitHub Projects usa los estados `Backlog`, `Ready`, `In progress`, `In review` y `Done`.
 - Cada issue de HU enlaza a su archivo y escenario Gherkin; el pull request de implementación enlaza el issue con `Closes #<number>`.
 - La automatización agrega cada issue nueva al tablero. Los pull requests enlazan el issue con `Closes #<number>` para que GitHub lo cierre al integrar el cambio.
+- Dado el alcance estimado de este proyecto no se considera el uso de JIRA para manejo del producto.
