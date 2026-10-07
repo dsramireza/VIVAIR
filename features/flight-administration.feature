@@ -38,6 +38,15 @@ Feature: Administrator flight management
     And the flight does not appear in passenger search
 
   @HU-009
+  Scenario: Reject publication when the base fare is zero
+    Given an Administrator is authenticated
+    And the application clock is "2026-10-07T12:00:00-05:00"
+    And the Administrator has a Draft flight from Bogotá to Medellín departing at "2026-10-15T09:00:00-05:00" with a base fare of COP 0
+    When the administrator publishes the flight
+    Then publication is rejected with the field error "La tarifa base debe ser mayor a COP 0"
+    And the flight does not appear in passenger search
+
+  @HU-009
   Scenario: Withdraw a flight that has confirmed bookings
     Given a Published flight has one Confirmed booking
     When the administrator withdraws the flight
