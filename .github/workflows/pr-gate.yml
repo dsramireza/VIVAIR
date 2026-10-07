@@ -1,0 +1,175 @@
+name: Pull Request Gate
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: pr-gate-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  pr-gate:
+    name: PR Gate
+    runs-on: ubuntu-latest
+    steps:
+      - name: Classify changed files
+        id: changes
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number,
+              per_page: 100,
+            });
+
+            const isMarkdown = (path) => path.endsWith('.md');
+            const isFeature = (path) => path.startsWith('features/') && path.endsWith('.feature');
+            const isGitHubConfig = (path) => path.startsWith('.github/');
+            const isDocumentation = (path) =>
+              isMarkdown(path) || isFeature(path) || isGitHubConfig(path);
+
+            core.setOutput('docs_only', String(files.length > 0 && files.every(({ filename }) => isDocumentation(filename))));
+            core.setOutput('has_markdown', String(files.some(({ filename }) => isMarkdown(filename))));
+            core.setOutput('has_features', String(files.some(({ filename }) => isFeature(filename))));
+            core.setOutput('has_application_changes', String(files.some(({ filename }) => !isDocumentation(filename))));
+
+      - name: Check out pull request
+        if: steps.changes.outputs.has_markdown == 'true' || steps.changes.outputs.has_features == 'true' || steps.changes.outputs.has_application_changes == 'true'
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node.js for documentation validators
+        if: steps.changes.outputs.has_markdown == 'true' || steps.changes.outputs.has_features == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Validate Markdown
+        if: steps.changes.outputs.has_markdown == 'true'
+        run: npx --yes markdownlint-cli2@0.23.3 --config .github/markdownlint-cli2.jsonc README.md '**/*.md'
+
+      - name: Validate Gherkin syntax and style
+        if: steps.changes.outputs.has_features == 'true'
+        run: npx --yes gherkin-lint@4.2.4 --config .github/gherkin-lintrc 'features/**/*.feature'
+
+      - name: Set up Node.js for application checks
+        if: steps.changes.outputs.has_application_changes == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Require an application manifest and lockfile
+        if: steps.changes.outputs.has_application_changes == 'true'
+        id: package-manager
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! -f package.json ]]; then
+            echo "Application changes require a package.json at the repository root." >&2
+            exit 1
+          fi
+
+          if [[ -f pnpm-lock.yaml ]]; then
+            echo "manager=pnpm" >> "$GITHUB_OUTPUT"
+          elif [[ -f yarn.lock ]]; then
+            echo "manager=yarn" >> "$GITHUB_OUTPUT"
+          elif [[ -f bun.lock || -f bun.lockb ]]; then
+            echo "manager=bun" >> "$GITHUB_OUTPUT"
+          elif [[ -f package-lock.json ]]; then
+            echo "manager=npm" >> "$GITHUB_OUTPUT"
+          else
+            echo "Application changes require a committed package-manager lockfile." >&2
+            exit 1
+          fi
+
+      - name: Set up Bun
+        if: steps.changes.outputs.has_application_changes == 'true' && steps.package-manager.outputs.manager == 'bun'
+        uses: oven-sh/setup-bun@v2
+
+      - name: Install application dependencies
+        if: steps.changes.outputs.has_application_changes == 'true'
+        shell: bash
+        env:
+          PACKAGE_MANAGER: ${{ steps.package-manager.outputs.manager }}
+        run: |
+          set -euo pipefail
+          case "$PACKAGE_MANAGER" in
+            npm)
+              npm ci
+              ;;
+            pnpm)
+              corepack enable
+              corepack pnpm install --frozen-lockfile
+              ;;
+            yarn)
+              corepack enable
+              corepack yarn install --immutable
+              ;;
+            bun)
+              bun install --frozen-lockfile
+              ;;
+          esac
+
+      - name: Run configured lint, type-check, and unit-test scripts
+        if: steps.changes.outputs.has_application_changes == 'true'
+        shell: bash
+        env:
+          PACKAGE_MANAGER: ${{ steps.package-manager.outputs.manager }}
+        run: |
+          set -euo pipefail
+
+          run_if_configured() {
+            local script_name="$1"
+            if node -e "const scripts = require('./package.json').scripts || {}; process.exit(scripts['${script_name}'] ? 0 : 1)"; then
+              echo "Running package script: $script_name"
+              case "$PACKAGE_MANAGER" in
+                npm) npm run "$script_name" ;;
+                pnpm) corepack pnpm run "$script_name" ;;
+                yarn) corepack yarn run "$script_name" ;;
+                bun) bun run "$script_name" ;;
+              esac
+            else
+              echo "No '$script_name' script is configured; skipping it."
+            fi
+          }
+
+          run_unit_tests() {
+            local script_name=""
+            if node -e "const scripts = require('./package.json').scripts || {}; process.exit(scripts['test:unit'] ? 0 : 1)"; then
+              script_name='test:unit'
+            elif node -e "const scripts = require('./package.json').scripts || {}; process.exit(scripts.test ? 0 : 1)"; then
+              script_name='test'
+            fi
+
+            if [[ -n "$script_name" ]]; then
+              echo "Running unit-test package script: $script_name"
+              case "$PACKAGE_MANAGER" in
+                npm) npm run "$script_name" ;;
+                pnpm) corepack pnpm run "$script_name" ;;
+                yarn) corepack yarn run "$script_name" ;;
+                bun) bun run "$script_name" ;;
+              esac
+              return
+            fi
+
+            if find . -path './node_modules' -prune -o -type f \( -name '*.test.js' -o -name '*.test.jsx' -o -name '*.test.ts' -o -name '*.test.tsx' -o -name '*.spec.js' -o -name '*.spec.jsx' -o -name '*.spec.ts' -o -name '*.spec.tsx' \) -print -quit | grep -q .; then
+              echo "Unit-test files exist, but package.json has no 'test:unit' or 'test' script." >&2
+              exit 1
+            fi
+
+            echo "No unit-test script or unit-test files are configured; skipping unit tests."
+          }
+
+          run_if_configured lint
+          run_if_configured typecheck
+          run_unit_tests
