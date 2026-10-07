@@ -14,6 +14,5 @@
   "no-files-without-scenarios": "on",
   "no-trailing-spaces": "on",
   "no-unnamed-features": "on",
-  "no-unnamed-scenarios": "on",
-  "one-feature-per-file": "on"
+  "no-unnamed-scenarios": "on"
 }
