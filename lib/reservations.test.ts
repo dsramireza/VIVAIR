@@ -1,4 +1,8 @@
+import { readFileSync } from "node:fs"
+import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
+
+const cancellationMigration = readFileSync(fileURLToPath(new URL("supabase/migrations/20261011000300_hu_008_cancel_booking_security_definer.sql", `file://${process.cwd()}/`)), "utf8")
 import { canCancelReservation, formatCop, mapReservation } from "./reservations"
 
 describe("HU-007/HU-008 reservation rules", () => {
@@ -16,4 +20,17 @@ describe("HU-007/HU-008 reservation rules", () => {
   })
 
   it("formats totals in Colombian pesos", () => expect(formatCop(450000)).toContain("450.000"))
+
+  it("defines the cancellation RPC with the production authorization contract", () => {
+    expect(cancellationMigration).toMatch(/security definer/i)
+    expect(cancellationMigration).toMatch(/set search_path = ''/i)
+    expect(cancellationMigration).toMatch(/caller_id uuid := \(select auth\.uid\(\)\)/i)
+    expect(cancellationMigration).toMatch(/and b\.passenger_id = caller_id/i)
+    expect(cancellationMigration).toMatch(/for update/i)
+    expect(cancellationMigration).toMatch(/booking_not_confirmed/i)
+    expect(cancellationMigration).toMatch(/now\(\) < f\.departure_at/i)
+    expect(cancellationMigration).toMatch(/revoke all on function public\.cancel_booking\(uuid\) from public, anon/i)
+    expect(cancellationMigration).toMatch(/grant execute on function public\.cancel_booking\(uuid\) to authenticated/i)
+    expect(cancellationMigration).not.toMatch(/grant update on public\.bookings/i)
+  })
 })

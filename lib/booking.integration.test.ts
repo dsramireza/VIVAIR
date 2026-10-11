@@ -7,8 +7,12 @@ const testServiceKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY
 const testEmail = process.env.SUPABASE_TEST_EMAIL
 const testPassword = process.env.SUPABASE_TEST_PASSWORD
 const testFlightId = "00000000-0000-0000-0000-000000000005"
+const secondTestEmail = process.env.SUPABASE_TEST_SECOND_EMAIL
+const secondTestPassword = process.env.SUPABASE_TEST_SECOND_PASSWORD
 const canRun = Boolean(testUrl && testAnonKey && testServiceKey && testEmail && testPassword) &&
   !/production|demo/i.test(testUrl ?? "") && /localhost|127\.0\.0\.1/.test(testUrl ?? "")
+const canRunAuthorization = canRun && Boolean(secondTestEmail && secondTestPassword)
+const describeAuthorization = canRunAuthorization ? describe : describe.skip
 const describeIntegration = canRun ? describe : describe.skip
 
 type BookingRow = { booking_id: string; booking_code: string; total: number }
@@ -107,5 +111,59 @@ describeIntegration("HU-005/HU-006 — isolated Supabase integration", () => {
     const results = await Promise.all([createBooking(["4A"], "Approved"), createBooking(["4A"], "Approved")])
     expect(results.filter((result) => result.data?.length === 1)).toHaveLength(1)
     expect(results.filter((result) => result.error?.message.includes("seat_unavailable:4A"))).toHaveLength(1)
+  })
+
+  it("cancels the complete owned booking and releases every seat", async () => {
+    const created = await createBooking(["5A", "6A", "7A"], "Approved")
+    expect(created.error).toBeNull()
+    const bookingId = (created.data?.[0] as BookingRow).booking_id
+
+    const cancelled = await user.rpc("cancel_booking", { p_booking_id: bookingId })
+    expect(cancelled.error).toBeNull()
+    expect(cancelled.data).toEqual([{ booking_id: bookingId, booking_status: "Cancelled", released_seats: 3 }])
+
+    const status = await user.rpc("get_flight_seat_status", { p_flight_id: testFlightId })
+    expect(status.error).toBeNull()
+    expect(status.data?.filter((seat: { label: string; occupied: boolean }) => ["5A", "6A", "7A"].includes(seat.label)).every((seat: { occupied: boolean }) => !seat.occupied)).toBe(true)
+  })
+
+  it("rejects a repeated cancellation", async () => {
+    const created = await createBooking(["8A"], "Approved")
+    const bookingId = (created.data?.[0] as BookingRow).booking_id
+    expect((await user.rpc("cancel_booking", { p_booking_id: bookingId })).error).toBeNull()
+    const repeated = await user.rpc("cancel_booking", { p_booking_id: bookingId })
+    expect(repeated.data).toBeNull()
+    expect(repeated.error?.message).toContain("booking_not_confirmed")
+  })
+})
+
+describeAuthorization("HU-008 — cancellation authorization", () => {
+  let secondUser: SupabaseClient
+
+  beforeAll(async () => {
+    admin = createClient(testUrl!, testServiceKey!, { auth: { autoRefreshToken: false, persistSession: false } })
+    user = createClient(testUrl!, testAnonKey!, { auth: { autoRefreshToken: false, persistSession: false } })
+    secondUser = createClient(testUrl!, testAnonKey!, { auth: { autoRefreshToken: false, persistSession: false } })
+    const first = await user.auth.signInWithPassword({ email: testEmail!, password: testPassword! })
+    const second = await secondUser.auth.signInWithPassword({ email: secondTestEmail!, password: secondTestPassword! })
+    if (first.error || second.error) throw first.error ?? second.error
+  })
+
+  afterAll(async () => {
+    await removeTestBookings()
+    await user.auth.signOut()
+    await secondUser.auth.signOut()
+  })
+
+  it("rejects cancellation of another passenger's booking", async () => {
+    const created = await user.rpc("create_mock_booking", {
+      p_flight_id: testFlightId,
+      p_passengers: payload(["9A"]),
+      p_payment: "Approved",
+    })
+    const bookingId = (created.data?.[0] as BookingRow).booking_id
+    const result = await secondUser.rpc("cancel_booking", { p_booking_id: bookingId })
+    expect(result.data).toBeNull()
+    expect(result.error?.message).toContain("booking_not_found")
   })
 })
