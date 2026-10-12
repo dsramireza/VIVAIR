@@ -17,10 +17,11 @@ select
   row_data.label,
   row_data.category::public.seat_category
 from (values
-  ('1A', 'Estándar'), ('1B', 'Plus'), ('1C', 'Estándar'), ('1D', 'Plus'), ('1E', 'Estándar'),
-  ('2A', 'Estándar'), ('2B', 'Plus'), ('2C', 'Estándar'), ('2D', 'Plus'), ('2E', 'Estándar'),
-  ('3A', 'Plus'), ('3B', 'Estándar'), ('3C', 'Estándar'), ('3D', 'Plus'), ('3E', 'Estándar'),
-  ('4A', 'Estándar'), ('4B', 'Plus'), ('4C', 'Estándar'), ('4D', 'Plus'), ('4E', 'Estándar')
+  ('1A', 'Plus'), ('1B', 'Plus'), ('1C', 'Plus'), ('1D', 'Plus'),
+  ('2A', 'Plus'), ('2B', 'Plus'), ('2C', 'Plus'), ('2D', 'Plus'),
+  ('3A', 'Estándar'), ('3B', 'Estándar'), ('3C', 'Estándar'), ('3D', 'Estándar'),
+  ('4A', 'Estándar'), ('4B', 'Estándar'), ('4C', 'Estándar'), ('4D', 'Estándar'),
+  ('5A', 'Estándar'), ('5B', 'Estándar'), ('5C', 'Estándar'), ('5D', 'Estándar')
 ) as row_data(label, category)
 on conflict (flight_id, label) do update set category = excluded.category;
 

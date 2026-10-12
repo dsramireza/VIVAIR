@@ -50,6 +50,7 @@ Cuando `main` local esté limpio y sea antecesor de `origin/main`, puede adelant
 - La arquitectura acordada es Next.js, TypeScript, Tailwind CSS y shadcn/ui, con Supabase PostgreSQL y Supabase Auth. Vercel aloja la aplicación.
 - La autorización debe protegerse en servidor y base de datos. No confíes en restricciones del cliente; el rol administrador no puede asignarse desde el cliente.
 - Hay dos proyectos gratuitos de Supabase para separar Preview/pruebas y demo. No pongas secretos en el repositorio; usa variables de entorno configuradas por entorno.
+- Usa el proyecto Supabase `test` (`ezghjeagjeuictmyfhcu`) para desarrollo, fixtures y pruebas de integración; el Preview debe apuntar a este proyecto. La suite de integración requiere `SUPABASE_TEST_URL`, `SUPABASE_TEST_ANON_KEY`, `SUPABASE_TEST_SERVICE_ROLE_KEY`, `SUPABASE_TEST_EMAIL` y `SUPABASE_TEST_PASSWORD` fuera del repositorio. No necesita una instancia local ni debe ejecutarse contra producción. Para probar autorización entre usuarios, añade también `SUPABASE_TEST_SECOND_EMAIL` y `SUPABASE_TEST_SECOND_PASSWORD`.
 - No fijes en código supuestos sobre límites cambiantes de los planes gratuitos. Consulta la configuración y documentación vigente cuando una decisión dependa de cuotas o disponibilidad.
 
 ## Gherkin, issues y trazabilidad
@@ -68,6 +69,7 @@ Cuando `main` local esté limpio y sea antecesor de `origin/main`, puede adelant
 - Vercel ejecuta Preview para cambios de código y Production para cambios integrados en `main`. Para PR con código, Preview y `PR Gate` se ejecutan en paralelo; ambos deben terminar correctamente y el equipo debe revisar el Preview antes del merge.
 - `.github/scripts/ignore-vercel-build.sh` omite builds para cambios exclusivamente documentales o de configuración GitHub. No elimines ni debilites esta clasificación sin una razón documentada.
 - La política acordada es que el check `PR Gate` sea obligatorio en `main`; verifica la configuración real de protección en GitHub antes de afirmar que está activa. La conversación no estableció una regla definitiva de aprobación exclusiva de una persona.
+- Al revisar un PR que implementa HU, comprueba que la descripción incluya `Closes #<número>` para cada issue cubierto y que los escenarios de esos issues tengan evidencia de validación. Después del merge, confirma en GitHub que todos quedaron cerrados y que su estado en el proyecto refleja la integración; si alguno sigue abierto, investiga la causa antes de cambiarlo manualmente.
 - GitHub tiene activada la eliminación automática de la rama origen después de integrar el PR. Cada siguiente cambio empieza desde una rama nueva basada en `main` actualizado.
 - No hagas push forzado, no sobrescribas ramas compartidas y no reutilices una rama cuyo PR ya se integró mediante squash. La historia integrada vive en `main`; los cambios posteriores se publican desde una rama nueva.
 
