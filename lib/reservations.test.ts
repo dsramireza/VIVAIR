@@ -13,6 +13,17 @@ describe("HU-007/HU-008 reservation rules", () => {
     expect(reservation.total).toBe(450000)
   })
 
+  it("keeps the cancellation itinerary when the live flight changes", () => {
+    const reservation = mapReservation({
+      id: "b2", code: "VA-TEST-002", total: "250000", status: "Cancelled",
+      cancelled_origin: "Bogotá", cancelled_destination: "Medellín", cancelled_departure_at: "2026-10-15T14:00:00Z",
+      flights: { origin: "Cali", destination: "Cartagena", departure_at: "2026-10-16T16:00:00Z" },
+    })
+    expect([reservation.origin, reservation.destination, reservation.departureAt]).toEqual([
+      "Bogotá", "Medellín", "2026-10-15T14:00:00Z",
+    ])
+  })
+
   it("allows cancellation strictly before departure", () => {
     expect(canCancelReservation(new Date("2026-10-07T17:00:00Z"), new Date("2026-10-15T14:00:00Z"))).toBe(true)
     expect(canCancelReservation(new Date("2026-10-15T14:00:00Z"), new Date("2026-10-15T14:00:00Z"))).toBe(false)
