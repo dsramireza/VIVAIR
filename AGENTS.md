@@ -50,6 +50,7 @@ Cuando `main` local esté limpio y sea antecesor de `origin/main`, puede adelant
 - La arquitectura acordada es Next.js, TypeScript, Tailwind CSS y shadcn/ui, con Supabase PostgreSQL y Supabase Auth. Vercel aloja la aplicación.
 - La autorización debe protegerse en servidor y base de datos. No confíes en restricciones del cliente; el rol administrador no puede asignarse desde el cliente.
 - Hay dos proyectos gratuitos de Supabase para separar Preview/pruebas y demo. No pongas secretos en el repositorio; usa variables de entorno configuradas por entorno.
+- Usa el proyecto Supabase `test` (`ezghjeagjeuictmyfhcu`) para desarrollo, fixtures y pruebas de integración; el Preview debe apuntar a este proyecto. La suite de integración requiere `SUPABASE_TEST_URL`, `SUPABASE_TEST_ANON_KEY`, `SUPABASE_TEST_SERVICE_ROLE_KEY`, `SUPABASE_TEST_EMAIL` y `SUPABASE_TEST_PASSWORD` fuera del repositorio. No necesita una instancia local ni debe ejecutarse contra producción. Para probar autorización entre usuarios, añade también `SUPABASE_TEST_SECOND_EMAIL` y `SUPABASE_TEST_SECOND_PASSWORD`.
 - No fijes en código supuestos sobre límites cambiantes de los planes gratuitos. Consulta la configuración y documentación vigente cuando una decisión dependa de cuotas o disponibilidad.
 
 ## Gherkin, issues y trazabilidad

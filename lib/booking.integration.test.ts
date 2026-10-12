@@ -2,8 +2,8 @@ import { createClient, type SupabaseClient } from "@supabase/supabase-js"
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest"
 import { mapReservation } from "./reservations"
 
-const testUrl = process.env.SUPABASE_TEST_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL
-const testAnonKey = process.env.SUPABASE_TEST_ANON_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+const testUrl = process.env.SUPABASE_TEST_URL
+const testAnonKey = process.env.SUPABASE_TEST_ANON_KEY
 const testServiceKey = process.env.SUPABASE_TEST_SERVICE_ROLE_KEY
 const testEmail = process.env.SUPABASE_TEST_EMAIL
 const testPassword = process.env.SUPABASE_TEST_PASSWORD
@@ -11,8 +11,9 @@ const testFlightId = "00000000-0000-0000-0000-000000000005"
 const reservationSelect = "id, code, total, status, flights(origin, destination, departure_at), booking_passengers(name, document_type, document_number, flight_seats(label))"
 const secondTestEmail = process.env.SUPABASE_TEST_SECOND_EMAIL
 const secondTestPassword = process.env.SUPABASE_TEST_SECOND_PASSWORD
-const canRun = Boolean(testUrl && testAnonKey && testServiceKey && testEmail && testPassword) &&
-  !/production|demo/i.test(testUrl ?? "") && /localhost|127\.0\.0\.1/.test(testUrl ?? "")
+const approvedTestUrl = "https://ezghjeagjeuictmyfhcu.supabase.co"
+const canRun = testUrl === approvedTestUrl &&
+  Boolean(testAnonKey && testServiceKey && testEmail && testPassword)
 const canRunAuthorization = canRun && Boolean(secondTestEmail && secondTestPassword)
 const describeAuthorization = canRunAuthorization ? describe : describe.skip
 const describeIntegration = canRun ? describe : describe.skip
