@@ -37,9 +37,7 @@ export default async function FlightChangesPage({ searchParams }: {
       {flights.map((flight) => <article key={flight.id} className="rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm">
         <h2 className="text-xl font-black">{flight.origin} → {flight.destination}</h2>
         <p className="mt-1 text-sm text-[var(--muted)]">{formatDeparture(flight.departure_at)} · {formatCOP(Number(flight.base_fare))} · {flight.status}</p>
-        {new Date(flight.departure_at).getTime() <= Date.now()
-          ? <p className="mt-4 text-sm text-[var(--muted)]">La salida ya ocurrió; no se puede modificar.</p>
-          : <form action={updateFlight} className="mt-5 grid gap-4 md:grid-cols-2">
+        <form action={updateFlight} className="mt-5 grid gap-4 md:grid-cols-2">
             <input type="hidden" name="flight_id" value={flight.id} />
             <label className="grid gap-2 font-semibold">Origen
               <select name="origin" required defaultValue={flight.origin} className="min-h-11 rounded-lg border border-[var(--border)] bg-white px-3">
@@ -58,7 +56,7 @@ export default async function FlightChangesPage({ searchParams }: {
               <Input name="base_fare" type="number" min="1" step="1" required defaultValue={Number(flight.base_fare)} />
             </label>
             <Button className="md:col-span-2 md:justify-self-start" type="submit">Guardar cambios</Button>
-          </form>}
+          </form>
       </article>)}
     </section>
   </main>
