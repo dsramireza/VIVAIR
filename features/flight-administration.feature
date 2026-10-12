@@ -20,13 +20,12 @@ Feature: Administrator flight management
     And passengers can find it in flight search
 
   @HU-009
-  Scenario: Reject publication when origin and destination are the same city
+  Scenario: Reject saving a flight when origin and destination are the same city
     Given an Administrator is authenticated
     And the application clock is "2026-10-07T12:00:00-05:00"
-    And the Administrator has a Draft flight from Bogotá to Bogotá departing at "2026-10-15T09:00:00-05:00"
-    When the administrator publishes the flight
-    Then publication is rejected with the field error "El destino debe ser distinto al origen"
-    And the flight does not appear in passenger search
+    When the administrator saves a new flight from Bogotá to Bogotá departing at "2026-10-15T09:00:00-05:00" with a base fare of COP 200000
+    Then saving is rejected with the field error "El destino debe ser distinto al origen"
+    And no flight is created
 
   @HU-009
   Scenario: Reject publication when departure is not in the future
@@ -38,13 +37,12 @@ Feature: Administrator flight management
     And the flight does not appear in passenger search
 
   @HU-009
-  Scenario: Reject publication when the base fare is zero
+  Scenario: Reject saving a flight when the base fare is zero
     Given an Administrator is authenticated
     And the application clock is "2026-10-07T12:00:00-05:00"
-    And the Administrator has a Draft flight from Bogotá to Medellín departing at "2026-10-15T09:00:00-05:00" with a base fare of COP 0
-    When the administrator publishes the flight
-    Then publication is rejected with the field error "La tarifa base debe ser mayor a COP 0"
-    And the flight does not appear in passenger search
+    When the administrator saves a new flight from Bogotá to Medellín departing at "2026-10-15T09:00:00-05:00" with a base fare of COP 0
+    Then saving is rejected with the field error "La tarifa base debe ser mayor a COP 0"
+    And no flight is created
 
   @HU-009
   Scenario: Withdraw a flight that has confirmed bookings
