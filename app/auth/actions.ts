@@ -34,7 +34,11 @@ export async function login(_: AuthState, formData: FormData): Promise<AuthState
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithPassword(parsed.data)
   if (error) return { error: loginMessage(error.code) }
-  redirect("/reservas")
+  const { data: { user } } = await supabase.auth.getUser()
+  const { data: profile } = user
+    ? await supabase.from("profiles").select("role").eq("id", user.id).single()
+    : { data: null }
+  redirect(profile?.role === "Administrator" ? "/admin/vuelos" : "/reservas")
 }
 
 export async function logout() {
