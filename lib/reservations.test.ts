@@ -28,7 +28,7 @@ describe("HU-007/HU-008 reservation rules", () => {
     expect(cancellationMigration).toMatch(/and b\.passenger_id = caller_id/i)
     expect(cancellationMigration).toMatch(/for update/i)
     expect(cancellationMigration).toMatch(/booking_not_confirmed/i)
-    expect(cancellationMigration).toMatch(/now\(\) < f\.departure_at/i)
+    expect(cancellationMigration).toMatch(/clock_timestamp\(\) < f\.departure_at/i)
     expect(cancellationMigration).toMatch(/revoke all on function public\.cancel_booking\(uuid\) from public, anon/i)
     expect(cancellationMigration).toMatch(/grant execute on function public\.cancel_booking\(uuid\) to authenticated/i)
     expect(cancellationMigration).not.toMatch(/grant update on public\.bookings/i)

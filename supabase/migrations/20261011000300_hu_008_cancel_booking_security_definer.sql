@@ -31,7 +31,7 @@ begin
     select 1
     from public.flights f
     where f.id = booking.flight_id
-      and now() < f.departure_at
+      and clock_timestamp() < f.departure_at
   ) then
     raise exception 'departure_already_reached';
   end if;

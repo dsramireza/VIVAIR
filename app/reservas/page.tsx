@@ -13,6 +13,7 @@ export default async function ReservationsPage() {
   const { data, error } = await supabase
     .from("bookings")
     .select("id, code, total, status, flights(origin, destination, departure_at), booking_passengers(name, document_type, document_number, flight_seats(label))")
+    .eq("passenger_id", user.id)
     .order("created_at", { ascending: false })
 
   if (error) throw new Error("No se pudieron cargar las reservas")

@@ -68,6 +68,7 @@ Cuando `main` local esté limpio y sea antecesor de `origin/main`, puede adelant
 - Vercel ejecuta Preview para cambios de código y Production para cambios integrados en `main`. Para PR con código, Preview y `PR Gate` se ejecutan en paralelo; ambos deben terminar correctamente y el equipo debe revisar el Preview antes del merge.
 - `.github/scripts/ignore-vercel-build.sh` omite builds para cambios exclusivamente documentales o de configuración GitHub. No elimines ni debilites esta clasificación sin una razón documentada.
 - La política acordada es que el check `PR Gate` sea obligatorio en `main`; verifica la configuración real de protección en GitHub antes de afirmar que está activa. La conversación no estableció una regla definitiva de aprobación exclusiva de una persona.
+- Al revisar un PR que implementa HU, comprueba que la descripción incluya `Closes #<número>` para cada issue cubierto y que los escenarios de esos issues tengan evidencia de validación. Después del merge, confirma en GitHub que todos quedaron cerrados y que su estado en el proyecto refleja la integración; si alguno sigue abierto, investiga la causa antes de cambiarlo manualmente.
 - GitHub tiene activada la eliminación automática de la rama origen después de integrar el PR. Cada siguiente cambio empieza desde una rama nueva basada en `main` actualizado.
 - No hagas push forzado, no sobrescribas ramas compartidas y no reutilices una rama cuyo PR ya se integró mediante squash. La historia integrada vive en `main`; los cambios posteriores se publican desde una rama nueva.
 
