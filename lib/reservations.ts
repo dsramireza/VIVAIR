@@ -5,6 +5,9 @@ type ReservationRow = {
   code: string
   total: number | string
   status: BookingStatus
+  cancelled_origin?: string | null
+  cancelled_destination?: string | null
+  cancelled_departure_at?: string | null
   flights: { departure_at: string; origin: string; destination: string } | Array<{ departure_at: string; origin: string; destination: string }>
   booking_passengers?: Array<{
     name: string
@@ -40,14 +43,15 @@ export function formatCop(value: number) {
 
 export function mapReservation(row: ReservationRow): Reservation {
   const flight = Array.isArray(row.flights) ? row.flights[0] : row.flights
+  const cancelledSnapshot = row.status === "Cancelled" && row.cancelled_origin && row.cancelled_destination && row.cancelled_departure_at
   return {
     id: row.id,
     code: row.code,
     total: Number(row.total),
     status: row.status,
-    departureAt: flight.departure_at,
-    origin: flight.origin,
-    destination: flight.destination,
+    departureAt: cancelledSnapshot ? row.cancelled_departure_at! : flight.departure_at,
+    origin: cancelledSnapshot ? row.cancelled_origin! : flight.origin,
+    destination: cancelledSnapshot ? row.cancelled_destination! : flight.destination,
     passengers: (row.booking_passengers ?? []).map((passenger) => ({
       name: passenger.name,
       documentType: passenger.document_type,

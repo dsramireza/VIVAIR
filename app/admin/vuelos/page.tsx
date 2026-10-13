@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -25,6 +26,7 @@ export default async function AdminFlightsPage({ searchParams }: { searchParams:
     <p className="font-bold text-[var(--primary)]">Administración</p>
     <h1 className="mt-2 text-4xl font-black">Gestión de vuelos</h1>
     <p className="mt-3 text-[var(--muted)]">Crea vuelos con 20 asientos, publícalos y controla su venta. Los horarios se ingresan en hora de Colombia.</p>
+    <Link className="mt-5 inline-block font-semibold underline" href="/admin/cambios">Modificar ruta, salida o tarifa de un vuelo</Link>
     {message.error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">{message.error}</p>}
     {message.notice && <p role="status" className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4 text-green-800">{message.notice}</p>}
 
