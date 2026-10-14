@@ -1,5 +1,5 @@
-import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
+import { AdminTabs } from "@/components/admin-tabs"
 import { createClient } from "@/lib/supabase/server"
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -10,12 +10,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (profile?.role !== "Administrator") notFound()
 
   return <>
-    <nav aria-label="Administración" className="border-b border-[var(--border)] bg-white">
-      <div className="mx-auto flex max-w-6xl gap-6 px-5 py-3 text-sm font-semibold text-[var(--primary)]">
-        <Link href="/admin/vuelos">Vuelos</Link>
-        <Link href="/admin/ventas">Ventas</Link>
-      </div>
-    </nav>
+    <AdminTabs />
     {children}
   </>
 }

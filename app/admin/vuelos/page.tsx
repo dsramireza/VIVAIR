@@ -1,14 +1,16 @@
 import Link from "next/link"
 import { notFound, redirect } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { PencilLine, Plus, Trash2 } from "lucide-react"
+import { Button, buttonVariants } from "@/components/ui/button"
+import { Input, Label, Select } from "@/components/ui/input"
+import { FlightStatusBadge } from "@/components/ui/badge"
+import { AdminHeader, Flash } from "@/components/admin-ui"
 import { createClient } from "@/lib/supabase/server"
-import { CITIES, formatCOP, formatDeparture, type Flight } from "@/lib/flights"
+import { CITIES, formatCOP, type Flight } from "@/lib/flights"
+import { bogotaShortDate, bogotaTime, iataCode } from "@/lib/airports"
 import { createFlight, deleteFlight, setFlightStatus } from "./actions"
 
-export const metadata = { title: "Gestión de vuelos | VIVAIR" }
-
-const statusLabels: Record<string, string> = { Draft: "Borrador", Published: "Publicado", Withdrawn: "Retirado" }
+export const metadata = { title: "Gestión de vuelos" }
 
 export default async function AdminFlightsPage({ searchParams }: { searchParams: Promise<{ error?: string; notice?: string }> }) {
   const supabase = await createClient()
@@ -21,60 +23,70 @@ export default async function AdminFlightsPage({ searchParams }: { searchParams:
   if (error) throw new Error("No pudimos cargar los vuelos")
   const flights = (data ?? []) as Flight[]
   const message = await searchParams
+  const count = (status: string) => flights.filter((f) => f.status === status).length
 
-  return <main className="mx-auto max-w-6xl px-5 py-12">
-    <p className="font-bold text-[var(--primary)]">Administración</p>
-    <h1 className="mt-2 text-4xl font-black">Gestión de vuelos</h1>
-    <p className="mt-3 text-[var(--muted)]">Crea vuelos con 20 asientos, publícalos y controla su venta. Los horarios se ingresan en hora de Colombia.</p>
-    <Link className="mt-5 inline-block font-semibold underline" href="/admin/cambios">Modificar ruta, salida o tarifa de un vuelo</Link>
-    {message.error && <p role="alert" className="mt-6 rounded-xl border border-red-200 bg-red-50 p-4 text-red-800">{message.error}</p>}
-    {message.notice && <p role="status" className="mt-6 rounded-xl border border-green-200 bg-green-50 p-4 text-green-800">{message.notice}</p>}
+  return <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6">
+    <AdminHeader title="Gestión de vuelos" description="Crea vuelos con 20 asientos, publícalos y controla su venta. Los horarios se ingresan en hora de Colombia." />
+    <Flash error={message.error} notice={message.notice} />
 
-    <section className="mt-10 rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm" aria-labelledby="create-flight-heading">
-      <h2 id="create-flight-heading" className="text-2xl font-bold">Crear vuelo</h2>
-      <p className="mt-1 text-sm text-[var(--muted)]">Se guardará como Borrador. Origen y destino deben ser distintos y la tarifa debe ser positiva.</p>
-      <form action={createFlight} className="mt-6 grid gap-4 md:grid-cols-2">
-        <label className="grid gap-2 font-semibold">Origen
-          <select name="origin" required defaultValue="" className="min-h-11 rounded-lg border border-[var(--border)] bg-white px-3">
-            <option value="" disabled>Selecciona una ciudad</option>
-            {CITIES.map((city) => <option key={city} value={city}>{city}</option>)}
-          </select>
-        </label>
-        <label className="grid gap-2 font-semibold">Destino
-          <select name="destination" required defaultValue="" className="min-h-11 rounded-lg border border-[var(--border)] bg-white px-3">
-            <option value="" disabled>Selecciona una ciudad</option>
-            {CITIES.map((city) => <option key={city} value={city}>{city}</option>)}
-          </select>
-        </label>
-        <label className="grid gap-2 font-semibold">Salida (hora de Colombia)
-          <Input name="departure_at" type="datetime-local" required />
-        </label>
-        <label className="grid gap-2 font-semibold">Tarifa base (COP)
-          <Input name="base_fare" type="number" min="1" step="1" required />
-        </label>
-        <Button className="md:col-span-2 md:justify-self-start" type="submit">Guardar borrador</Button>
-      </form>
-    </section>
+    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl bg-line ring-1 ring-line sm:grid-cols-4">
+      {[["Vuelos", flights.length], ["Publicados", count("Published")], ["Borradores", count("Draft")], ["Retirados", count("Withdrawn")]].map(([label, value]) =>
+        <div key={label} className="bg-white px-5 py-4"><dt className="text-sm text-muted">{label}</dt><dd className="font-display text-3xl font-extrabold">{value}</dd></div>)}
+    </dl>
 
-    <section className="mt-10" aria-labelledby="flights-heading">
-      <h2 id="flights-heading" className="text-2xl font-bold">Vuelos ({flights.length})</h2>
-      <div className="mt-5 grid gap-4">
-        {flights.length === 0 && <p className="rounded-xl border border-dashed border-[var(--border)] bg-white p-6">Aún no hay vuelos.</p>}
-        {flights.map((flight) => <article key={flight.id} className="rounded-2xl border border-[var(--border)] bg-white p-5 shadow-sm">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p className="text-sm font-bold text-[var(--primary)]">{statusLabels[flight.status] ?? flight.status}</p>
-              <h3 className="mt-1 text-xl font-black">{flight.origin} → {flight.destination}</h3>
-              <p className="mt-2 text-sm text-[var(--muted)]">{formatDeparture(flight.departure_at)} · Tarifa base {formatCOP(Number(flight.base_fare))}</p>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {flight.status !== "Published" && <form action={setFlightStatus}><input type="hidden" name="flight_id" value={flight.id} /><input type="hidden" name="status" value="Published" /><Button type="submit">Publicar</Button></form>}
-              {flight.status === "Published" && <form action={setFlightStatus}><input type="hidden" name="flight_id" value={flight.id} /><input type="hidden" name="status" value="Withdrawn" /><Button type="submit" className="bg-amber-700">Retirar</Button></form>}
-              <form action={deleteFlight}><input type="hidden" name="flight_id" value={flight.id} /><Button type="submit" className="bg-slate-700">Eliminar</Button></form>
-            </div>
+    <div className="grid gap-8 lg:grid-cols-[340px_1fr] lg:items-start">
+      <section className="rounded-3xl bg-white p-6 ring-1 ring-line lg:sticky lg:top-24" aria-labelledby="create-flight-heading">
+        <h2 id="create-flight-heading" className="text-xl font-extrabold">Crear vuelo</h2>
+        <p className="mt-1 text-sm text-muted">Se guardará como Borrador. Origen y destino deben ser distintos y la tarifa debe ser positiva.</p>
+        <form action={createFlight} className="mt-5 grid gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Label>Origen
+              <Select name="origin" required defaultValue="">
+                <option value="" disabled>Ciudad</option>
+                {CITIES.map((city) => <option key={city} value={city}>{city}</option>)}
+              </Select>
+            </Label>
+            <Label>Destino
+              <Select name="destination" required defaultValue="">
+                <option value="" disabled>Ciudad</option>
+                {CITIES.map((city) => <option key={city} value={city}>{city}</option>)}
+              </Select>
+            </Label>
           </div>
-        </article>)}
-      </div>
-    </section>
+          <Label>Salida (hora de Colombia)
+            <Input name="departure_at" type="datetime-local" required />
+          </Label>
+          <Label>Tarifa base (COP)
+            <Input name="base_fare" type="number" min="1" step="1" required placeholder="200000" />
+          </Label>
+          <Button type="submit"><Plus aria-hidden="true" className="size-4" />Guardar borrador</Button>
+        </form>
+      </section>
+
+      <section aria-labelledby="flights-heading" className="min-w-0">
+        <h2 id="flights-heading" className="text-xl font-extrabold">Vuelos ({flights.length})</h2>
+        {flights.length === 0
+          ? <p className="mt-4 rounded-2xl border-2 border-dashed border-line p-8 text-center text-muted">Aún no hay vuelos. Crea el primero con el formulario.</p>
+          : <ul className="mt-4 divide-y divide-line overflow-hidden rounded-3xl bg-white ring-1 ring-line">
+            {flights.map((flight) => <li key={flight.id} className="grid grid-cols-[1fr_auto] items-center gap-x-4 gap-y-3 px-5 py-4 md:grid-cols-[96px_1fr_110px_auto]">
+              <div>
+                <p className="font-display text-lg font-extrabold">{iataCode(flight.origin)}–{iataCode(flight.destination)}</p>
+                <FlightStatusBadge status={flight.status} />
+              </div>
+              <div className="col-span-2 row-start-2 min-w-0 md:col-span-1 md:row-start-auto">
+                <h3 className="font-semibold">{flight.origin} → {flight.destination}</h3>
+                <p className="text-sm text-muted">{bogotaShortDate(flight.departure_at)}, {bogotaTime(flight.departure_at)}</p>
+              </div>
+              <p className="col-start-2 row-start-1 text-right font-display text-lg font-extrabold md:col-start-auto md:row-start-auto">{formatCOP(Number(flight.base_fare))}</p>
+              <div className="col-span-2 flex items-center gap-1.5 md:col-span-1 md:justify-end">
+                {flight.status !== "Published" && <form action={setFlightStatus}><input type="hidden" name="flight_id" value={flight.id} /><input type="hidden" name="status" value="Published" /><Button size="sm" type="submit" className="w-36">{flight.status === "Withdrawn" ? "Volver a publicar" : "Publicar"}</Button></form>}
+                {flight.status === "Published" && <form action={setFlightStatus}><input type="hidden" name="flight_id" value={flight.id} /><input type="hidden" name="status" value="Withdrawn" /><Button size="sm" variant="outline" type="submit" className="w-36">Retirar</Button></form>}
+                <Link className={buttonVariants({ size: "sm", variant: "ghost" })} href={`/admin/cambios?vuelo=${flight.id}#vuelo-${flight.id}`} title="Modificar ruta, salida o tarifa" aria-label={`Modificar vuelo ${flight.origin} a ${flight.destination}`}><PencilLine aria-hidden="true" className="size-4" /></Link>
+                <form action={deleteFlight}><input type="hidden" name="flight_id" value={flight.id} /><Button size="sm" variant="danger" type="submit" title="Eliminar (solo vuelos sin reservas)" aria-label={`Eliminar vuelo ${flight.origin} a ${flight.destination}`}><Trash2 aria-hidden="true" className="size-4" /></Button></form>
+              </div>
+            </li>)}
+          </ul>}
+      </section>
+    </div>
   </main>
 }

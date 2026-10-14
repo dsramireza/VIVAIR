@@ -1,0 +1,15 @@
+# Dependencias y builds
+node_modules/
+.next/
+out/
+*.tsbuildinfo
+next-env.d.ts
+
+# Variables de entorno (nunca versionar credenciales)
+.env
+.env*.local
+
+# Vercel y sistema
+.vercel
+.DS_Store
+npm-debug.log*

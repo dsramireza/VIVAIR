@@ -22,5 +22,5 @@ export const FARE_CATEGORIES = [
   { name: "Estándar", surcharge: 0, baggage: "Un artículo personal" },
   { name: "Plus", surcharge: 50000, baggage: "Un artículo personal y un equipaje de cabina de hasta 10 kg" },
 ] as const
-export const formatCOP = (amount: number) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 2 }).format(amount)
+export const formatCOP = (amount: number) => new Intl.NumberFormat("es-CO", { style: "currency", currency: "COP", maximumFractionDigits: 0 }).format(amount)
 export const formatDeparture = (date: string) => new Intl.DateTimeFormat("es-CO", { timeZone: "America/Bogota", dateStyle: "long", timeStyle: "short" }).format(new Date(date))
