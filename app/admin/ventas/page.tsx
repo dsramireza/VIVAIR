@@ -1,8 +1,9 @@
 import { notFound, redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { formatCOP } from "@/lib/flights"
+import { AdminHeader } from "@/components/admin-ui"
 
-export const metadata = { title: "Ventas | VIVAIR" }
+export const metadata = { title: "Ventas" }
 
 type SalesSummary = { confirmed_bookings: number; confirmed_passengers: number; sales_cop: number | string }
 
@@ -16,15 +17,29 @@ export default async function SalesPage() {
   const { data, error } = await supabase.rpc("admin_sales_summary")
   if (error) throw new Error("No pudimos cargar las ventas")
   const summary = (data?.[0] ?? { confirmed_bookings: 0, confirmed_passengers: 0, sales_cop: 0 }) as SalesSummary
+  const sales = Number(summary.sales_cop)
+  const bookings = Number(summary.confirmed_bookings)
+  const passengers = Number(summary.confirmed_passengers)
 
-  return <main className="mx-auto max-w-6xl px-5 py-12">
-    <p className="font-bold text-[var(--primary)]">Administración</p>
-    <h1 className="mt-2 text-4xl font-black">Ventas simuladas</h1>
-    <p className="mt-3 text-[var(--muted)]">Solo se cuentan reservas confirmadas. Las cancelaciones se excluyen de todos los totales.</p>
-    <section className="mt-10 grid gap-5 md:grid-cols-3" aria-label="Resumen de ventas">
-      <article className="rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm"><h2 className="text-sm font-semibold text-[var(--muted)]">Reservas confirmadas</h2><p className="mt-3 text-4xl font-black">{summary.confirmed_bookings}</p></article>
-      <article className="rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm"><h2 className="text-sm font-semibold text-[var(--muted)]">Pasajeros confirmados</h2><p className="mt-3 text-4xl font-black">{summary.confirmed_passengers}</p></article>
-      <article className="rounded-2xl border border-[var(--border)] bg-white p-6 shadow-sm"><h2 className="text-sm font-semibold text-[var(--muted)]">Ingresos simulados</h2><p className="mt-3 text-4xl font-black">{formatCOP(Number(summary.sales_cop))}</p></article>
+  return <main className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-10 sm:px-6">
+    <AdminHeader title="Ventas simuladas" description="Solo se cuentan reservas confirmadas. Las cancelaciones se excluyen de todos los totales." />
+    <section aria-label="Resumen de ventas" className="grid gap-4 lg:grid-cols-[1.4fr_1fr_1fr]">
+      <article className="flex flex-col justify-between gap-10 rounded-3xl bg-night p-7 text-white">
+        <h2 className="font-sans text-sm font-semibold text-white/70">Ingresos simulados</h2>
+        <p className="font-display text-5xl font-extrabold sm:text-6xl">{formatCOP(sales)} <span className="text-lg font-semibold text-white/60">COP</span></p>
+      </article>
+      <article className="flex flex-col justify-between gap-10 rounded-3xl bg-white p-7 ring-1 ring-line">
+        <h2 className="font-sans text-sm font-semibold text-muted">Reservas confirmadas</h2>
+        <p className="font-display text-5xl font-extrabold">{bookings}</p>
+      </article>
+      <article className="flex flex-col justify-between gap-10 rounded-3xl bg-white p-7 ring-1 ring-line">
+        <h2 className="font-sans text-sm font-semibold text-muted">Pasajeros confirmados</h2>
+        <p className="font-display text-5xl font-extrabold">{passengers}</p>
+      </article>
     </section>
+    <dl className="grid gap-px overflow-hidden rounded-2xl bg-line ring-1 ring-line sm:grid-cols-2">
+      <div className="bg-white px-6 py-4"><dt className="text-sm text-muted">Promedio por reserva</dt><dd className="font-display text-2xl font-extrabold">{bookings ? formatCOP(Math.round(sales / bookings)) : "—"}</dd></div>
+      <div className="bg-white px-6 py-4"><dt className="text-sm text-muted">Pasajeros por reserva</dt><dd className="font-display text-2xl font-extrabold">{bookings ? (passengers / bookings).toLocaleString("es-CO", { maximumFractionDigits: 1 }) : "—"}</dd></div>
+    </dl>
   </main>
 }
