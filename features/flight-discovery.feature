@@ -1,4 +1,3 @@
-Unable to open session log file "/home/dasanta/.cache/starship/session_2770467291705763.log": Os { code: 30, kind: ReadOnlyFilesystem, message: "Read-only file system" }!
 Feature: Flight discovery and fare information
 
   @HU-003
