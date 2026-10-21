@@ -9,7 +9,7 @@ GitHub es la fuente de verdad del código y de los requisitos. V0 genera la apli
 ### Pasajero
 
 - Crea una cuenta con nombre, correo y contraseña, e inicia sesión. La demo no requiere confirmar el correo.
-- Busca vuelos de solo ida entre ciudades colombianas del catálogo fijo y consulta vuelos publicados para fechas futuras.
+- Consulta el catálogo público de vuelos publicados con salida futura, incluso antes de iniciar sesión. Puede filtrar el catálogo por origen, destino, fecha local o cualquier combinación de esos criterios.
 - Reserva para una a cuatro personas. Cada pasajero tiene nombre legal, tipo y número de documento, y un asiento asignado.
 - Consulta y cancela la reserva completa antes de la salida programada. La cancelación libera todos sus asientos; no hay reembolso real.
 - Recibe en su cuenta avisos cuando administración modifica un vuelo reservado.
@@ -26,7 +26,7 @@ GitHub es la fuente de verdad del código y de los requisitos. V0 genera la apli
 ### Incluido
 
 - Aplicación web adaptable a escritorio y móvil, con interfaz en español.
-- Vuelos de solo ida entre estas ciudades: Bogotá, Medellín, Cali, Cartagena y Barranquilla. La búsqueda requiere origen, destino y fecha local.
+- Vuelos de solo ida entre estas ciudades: Bogotá, Medellín, Cali, Cartagena y Barranquilla. El catálogo inicial muestra vuelos publicados con salida futura; origen, destino y fecha local son filtros opcionales.
 - Vuelos con hora de salida local, tarifa base positiva en COP y un mapa fijo de 20 asientos: filas 1–2 son Plus; filas 3–5 son Estándar; cada fila tiene asientos A–D.
 - Tarifa por pasajero igual a la tarifa base del vuelo más el recargo de categoría. Estándar agrega COP 0; Plus agrega COP 50.000. Son valores ficticios de demostración, configurados globalmente y no editables por vuelo.
 - Política ficticia de equipaje visible antes de pagar: Estándar incluye un artículo personal; Plus incluye un artículo personal y un equipaje de cabina de hasta 10 kg. No se vende equipaje adicional.
@@ -45,7 +45,7 @@ GitHub es la fuente de verdad del código y de los requisitos. V0 genera la apli
 ## Reglas de operación
 
 - Las horas se interpretan y presentan en `America/Bogota`; importes se presentan en COP con formato colombiano.
-- Todo vuelo inicia como `Draft`; solo vuelos `Published` con salida futura aparecen en búsqueda. Origen y destino deben ser distintos y pertenecer al catálogo fijo. La tarifa base debe ser mayor que COP 0.
+- Todo vuelo inicia como `Draft`; solo vuelos `Published` con salida futura aparecen en el catálogo público. El catálogo se muestra sin filtros al abrir la página de búsqueda y puede filtrarse por origen, destino y fecha de salida local en `America/Bogota`. Los filtros son opcionales y pueden combinarse. Cuando se indican origen y destino, deben ser distintos y pertenecer al catálogo fijo. La tarifa base debe ser mayor que COP 0.
 - Retirar un vuelo impide nuevas compras. Si tiene cualquier reserva —incluso cancelada— se conserva y no puede borrarse físicamente. Solo se puede borrar un vuelo que nunca tuvo reservas. Un vuelo retirado puede volver a publicarse si su salida sigue en el futuro.
 - Un asiento se asigna a una sola reserva confirmada por vuelo. La disponibilidad se valida de nuevo al aprobar el pago; si otro usuario ocupó el asiento, no se crea la reserva.
 - Un pago rechazado no crea reserva ni bloquea asientos. El importe confirmado queda congelado en la reserva aunque cambie la tarifa del vuelo.
