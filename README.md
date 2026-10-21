@@ -1,4 +1,3 @@
-Unable to open session log file "/home/dasanta/.cache/starship/session_2832817779218912.log": Os { code: 30, kind: ReadOnlyFilesystem, message: "Read-only file system" }!
 # VIVAIR
 
 VIVAIR es un prototipo web para demostrar el funcionamiento básico de una aerolínea: pasajeros buscan vuelos nacionales, reservan asientos con un pago simulado y administración publica vuelos y consulta ventas.
